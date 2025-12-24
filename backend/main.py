@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from config import settings
-from backend.routers import auth, templates, runs
+from routers import auth, templates, runs
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
