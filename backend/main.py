@@ -5,19 +5,21 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from backend.config import settings
 from backend.routers import auth, templates, runs
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    # Startup: connect to MongoDB
     app.mongodb_client = AsyncIOMotorClient(settings.mongodb_uri)
     app.mongodb = app.mongodb_client[settings.db_name]
     print("Connected to the MongoDB database!")
     yield
-    # Shutdown
+    # Shutdown: close MongoDB connection
     app.mongodb_client.close()
 
+# ---------------- FastAPI app ----------------
 app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
-# CORS Setup
+# ---------------- CORS Middleware ----------------
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -26,10 +28,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------- Root Route ----------------
+@app.get("/")
+async def root():
+    return {"message": f"Welcome to {settings.app_name} API!"}
+
+# ---------------- Include Routers ----------------
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(templates.router, prefix="/api/v1/templates", tags=["templates"])
 app.include_router(runs.router, prefix="/api/v1/runs", tags=["runs"])
 
+# ---------------- Health Check ----------------
 @app.get("/api/v1/healthz")
 async def health_check():
     try:
